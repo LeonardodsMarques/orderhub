@@ -1,0 +1,3 @@
+namespace OrderService.Application.Dtos;
+
+public record CreateOrderItemDto(string ProductName, int Quantity, decimal UnitPrice, string Currency);
