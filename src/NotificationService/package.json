@@ -1,0 +1,13 @@
+{
+  "name": "notificationservice",
+  "version": "1.0.0",
+  "description": "Notification service consuming order-created events",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.4",
+    "express": "^4.19.2"
+  }
+}
