@@ -10,6 +10,7 @@ public class OrderDbContext : DbContext
 
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
+    public DbSet<OutboxMessage> OutboxMessages => Set<OutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,6 +52,16 @@ public class OrderDbContext : DbContext
             price.Property(p => p.ProductName).HasMaxLength(200);
             price.Property(p => p.UnitPrice).IsRequired().HasPrecision(18, 2);
             price.Property(p => p.Currency).IsRequired().HasMaxLength(3);
+        });
+
+        modelBuilder.Entity<OutboxMessage>(message =>
+        {
+            message.HasKey(m => m.Id);
+            message.Property(m => m.EventType).IsRequired().HasMaxLength(200);
+            message.Property(m => m.Payload).IsRequired();
+            message.Property(m => m.CreatedAt).IsRequired();
+            message.Property(m => m.ProcessedAt);
+            message.Property(m => m.Error);
         });
     }
 }

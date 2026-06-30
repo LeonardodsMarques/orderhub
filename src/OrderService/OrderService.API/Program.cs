@@ -5,6 +5,7 @@ using OrderService.Application.Interfaces;
 using OrderService.Application.Queries;
 using OrderService.Infrastructure.Data;
 using OrderService.Infrastructure.Messaging;
+using OrderService.Infrastructure.Messaging.Outbox;
 using OrderService.Infrastructure.Repositories;
 using OrderService.Infrastructure.UnitOfWork;
 
@@ -28,6 +29,8 @@ builder.Services.AddDbContext<OrderDbContext>(options =>
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IProductPriceProvider, ProductPriceProvider>();
+builder.Services.AddScoped<IOutboxStore, OutboxStore>();
+builder.Services.AddHostedService<OutboxProcessor>();
 
 builder.Services.AddScoped<ICommandHandler<CreateOrderCommand, Guid>, CreateOrderCommandHandler>();
 builder.Services.AddScoped<ICommandHandler<UpdateOrderStatusCommand, bool>, UpdateOrderStatusCommandHandler>();

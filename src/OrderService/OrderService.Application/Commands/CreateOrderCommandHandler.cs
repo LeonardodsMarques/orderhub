@@ -1,3 +1,4 @@
+using System.Text.Json;
 using OrderHub.Contracts;
 using OrderService.Application.Dtos;
 using OrderService.Application.Interfaces;
@@ -9,18 +10,18 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Gui
 {
     private readonly IOrderRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IEventPublisher _eventPublisher;
+    private readonly IOutboxStore _outboxStore;
     private readonly IProductPriceProvider _priceProvider;
 
     public CreateOrderCommandHandler(
         IOrderRepository repository,
         IUnitOfWork unitOfWork,
-        IEventPublisher eventPublisher,
+        IOutboxStore outboxStore,
         IProductPriceProvider priceProvider)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
-        _eventPublisher = eventPublisher;
+        _outboxStore = outboxStore;
         _priceProvider = priceProvider;
     }
 
@@ -71,7 +72,15 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Gui
             order.CreatedAt,
             order.Items.Select(i => new OrderCreatedItem(i.ProductName, i.Quantity)).ToList());
 
-        await _eventPublisher.PublishAsync(evt, cancellationToken);
+        await _outboxStore.AddAsync(new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            EventType = evt.GetType().AssemblyQualifiedName!,
+            Payload = JsonSerializer.Serialize(evt, evt.GetType()),
+            CreatedAt = DateTime.UtcNow
+        }, cancellationToken);
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return order.Id;
     }

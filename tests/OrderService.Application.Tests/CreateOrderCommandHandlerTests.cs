@@ -32,11 +32,11 @@ public class CreateOrderCommandHandlerTests
     public async Task HandleAsync_UsesLocalPriceAndCalculatesTotal()
     {
         using var context = CreateContext();
-        var publisher = new FakeEventPublisher();
+        var outbox = new FakeOutboxStore();
         var handler = new CreateOrderCommandHandler(
             new OrderRepository(context),
             new UnitOfWork(context),
-            publisher,
+            outbox,
             new ProductPriceProvider(context));
 
         var command = new CreateOrderCommand(
@@ -54,18 +54,19 @@ public class CreateOrderCommandHandlerTests
         Assert.Equal(2, order.Items.Count);
         Assert.Equal(229.70m, order.TotalAmount.Amount);
         Assert.Equal("BRL", order.TotalAmount.Currency);
-        Assert.Single(publisher.Published.OfType<OrderCreated>());
+        Assert.Single(outbox.Messages);
+        Assert.Equal(typeof(OrderCreated).AssemblyQualifiedName, outbox.Messages[0].EventType);
     }
 
     [Fact]
     public async Task HandleAsync_WhenProductPriceMissing_ThrowsArgumentException()
     {
         using var context = CreateContext();
-        var publisher = new FakeEventPublisher();
+        var outbox = new FakeOutboxStore();
         var handler = new CreateOrderCommandHandler(
             new OrderRepository(context),
             new UnitOfWork(context),
-            publisher,
+            outbox,
             new ProductPriceProvider(context));
 
         var command = new CreateOrderCommand(
@@ -80,11 +81,11 @@ public class CreateOrderCommandHandlerTests
     public async Task HandleAsync_GroupsDuplicateProducts()
     {
         using var context = CreateContext();
-        var publisher = new FakeEventPublisher();
+        var outbox = new FakeOutboxStore();
         var handler = new CreateOrderCommandHandler(
             new OrderRepository(context),
             new UnitOfWork(context),
-            publisher,
+            outbox,
             new ProductPriceProvider(context));
 
         var command = new CreateOrderCommand(
