@@ -7,6 +7,14 @@ const api = axios.create({
   }
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('orderhub_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const getOrders = (skip = 0, take = 10) =>
   api.get('/orders', { params: { skip, take } });
 
@@ -21,5 +29,8 @@ export const setStock = (productName, quantity, unitPrice, currency = 'BRL') =>
 
 export const removeStock = (productName) =>
   api.delete(`/inventory/stock/${encodeURIComponent(productName)}`);
+
+export const login = (email) =>
+  api.post('/auth/login', { email });
 
 export default api;

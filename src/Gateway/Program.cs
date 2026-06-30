@@ -1,4 +1,7 @@
+using System.Text;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,32 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = 429;
 });
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var key = builder.Configuration["Jwt:Key"];
+        if (!string.IsNullOrEmpty(key))
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "OrderHub",
+                ValidAudience = builder.Configuration["Jwt:Audience"] ?? "OrderHub",
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+            };
+        }
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAuthenticated", policy =>
+        policy.RequireAuthenticatedUser());
+});
+builder.Services.AddControllers();
+
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
@@ -40,8 +69,11 @@ builder.Services.AddCors(cors =>
 var app = builder.Build();
 
 app.UseCors();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseRateLimiter();
 app.MapHealthChecks("/health");
+app.MapControllers();
 app.MapReverseProxy();
 
 app.Run();

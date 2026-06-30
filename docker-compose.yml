@@ -108,6 +108,9 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 5000
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: ${JWT_ISSUER}
+      Jwt__Audience: ${JWT_AUDIENCE}
       ReverseProxy__Clusters__orderservice__Destinations__destination1__Address: "http://orderservice:5001"
       ReverseProxy__Clusters__notificationservice__Destinations__destination1__Address: "http://notificationservice:5002"
       ReverseProxy__Clusters__inventoryservice__Destinations__destination1__Address: "http://inventoryservice:5003"
