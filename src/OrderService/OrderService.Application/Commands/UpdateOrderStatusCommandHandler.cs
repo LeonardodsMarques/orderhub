@@ -1,3 +1,4 @@
+using OrderHub.Contracts;
 using OrderService.Application.Interfaces;
 using OrderService.Domain.Enums;
 
@@ -7,11 +8,13 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
 {
     private readonly IOrderRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEventPublisher _eventPublisher;
 
-    public UpdateOrderStatusCommandHandler(IOrderRepository repository, IUnitOfWork unitOfWork)
+    public UpdateOrderStatusCommandHandler(IOrderRepository repository, IUnitOfWork unitOfWork, IEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task<bool> HandleAsync(UpdateOrderStatusCommand command, CancellationToken cancellationToken = default)
@@ -36,6 +39,16 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (status == OrderStatus.Cancelled)
+        {
+            var items = order.Items
+                .Select(i => new OrderCancelledItem(i.ProductName, i.Quantity))
+                .ToList();
+
+            await _eventPublisher.PublishAsync(new OrderCancelled(order.Id, items), cancellationToken);
+        }
+
         return true;
     }
 }

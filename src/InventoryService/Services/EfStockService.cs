@@ -37,6 +37,18 @@ public class EfStockService : IStockService
         return (true, null);
     }
 
+    public void ReleaseItems(IEnumerable<(string ProductName, int Quantity)> items)
+    {
+        foreach (var (productName, quantity) in items)
+        {
+            var item = _dbContext.StockItems.Find(productName);
+            if (item is not null)
+                item.Quantity += quantity;
+        }
+
+        _dbContext.SaveChanges();
+    }
+
     public IReadOnlyDictionary<string, int> GetStock()
     {
         return _dbContext.StockItems

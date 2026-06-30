@@ -28,6 +28,7 @@ builder.Services.AddScoped<IProductPricePublisher, MassTransitProductPricePublis
 builder.Services.AddMassTransit(busConfigurator =>
 {
     busConfigurator.AddConsumer<InventoryConsumer>();
+    busConfigurator.AddConsumer<OrderCancelledConsumer>();
 
     busConfigurator.UsingRabbitMq((context, cfg) =>
     {
