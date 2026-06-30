@@ -12,23 +12,6 @@ Sistema de pedidos e estoque baseado em microsserviços. Demonstra comunicação
 - **JWT Bearer** — autenticação no Gateway
 - **Docker + Docker Compose** — execução local
 
-## Arquitetura
-
-```mermaid
-graph LR
-    A[Frontend<br/>localhost:3000] --> B[Gateway<br/>YARP :5000]
-    B --> C[OrderService :5001]
-    B --> D[InventoryService :5003]
-    B --> E[NotificationService :5002]
-    C --> F[(PostgreSQL<br/>orderhub)]
-    D --> G[(PostgreSQL<br/>inventory)]
-    C -.OrderCreated.-> H[(RabbitMQ)]
-    C -.OrderCancelled.-> H
-    D -.StockReserved / OutOfStock.-> H
-    D -.ProductPriceChanged.-> H
-    E -.OrderCreated.-> H
-```
-
 ### Fluxo de criação de pedido
 
 1. Frontend chama `POST /api/orders` via Gateway.
