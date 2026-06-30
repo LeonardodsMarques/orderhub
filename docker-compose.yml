@@ -83,12 +83,15 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 5003
+      ConnectionStrings__Postgres: "Host=postgres;Database=inventory;Username=postgres;Password=postgres"
       RabbitMq__Host: rabbitmq
       RabbitMq__Username: guest
       RabbitMq__Password: guest
     ports:
       - "5003:5003"
     depends_on:
+      postgres:
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     healthcheck:
@@ -107,12 +110,15 @@ services:
       ASPNETCORE_HTTP_PORTS: 5000
       ReverseProxy__Clusters__orderservice__Destinations__destination1__Address: "http://orderservice:5001"
       ReverseProxy__Clusters__notificationservice__Destinations__destination1__Address: "http://notificationservice:5002"
+      ReverseProxy__Clusters__inventoryservice__Destinations__destination1__Address: "http://inventoryservice:5003"
     ports:
       - "5000:5000"
     depends_on:
       orderservice:
         condition: service_healthy
       notificationservice:
+        condition: service_healthy
+      inventoryservice:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]

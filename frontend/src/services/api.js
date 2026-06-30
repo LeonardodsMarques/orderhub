@@ -14,7 +14,12 @@ export const getOrder = (id) => api.get(`/orders/${id}`);
 
 export const createOrder = (data) => api.post('/orders', data);
 
-export const updateStatus = (id, status) =>
-  api.patch(`/orders/${id}/status`, { status });
+export const getStock = () => api.get('/inventory/stock');
+
+export const setStock = (productName, quantity) =>
+  api.post('/inventory/stock', { productName, quantity });
+
+export const removeStock = (productName) =>
+  api.delete(`/inventory/stock/${encodeURIComponent(productName)}`);
 
 export default api;

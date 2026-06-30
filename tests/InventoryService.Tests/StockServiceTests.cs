@@ -1,14 +1,30 @@
+using InventoryService.Data;
 using InventoryService.Services;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace InventoryService.Tests;
 
 public class StockServiceTests
 {
+    private static InventoryDbContext CreateContext()
+    {
+        var options = new DbContextOptionsBuilder<InventoryDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        var context = new InventoryDbContext(options);
+        context.Database.EnsureCreated();
+        context.StockItems.AddRange(StockSeed.Items);
+        context.SaveChanges();
+        return context;
+    }
+
     [Fact]
     public void TryReserveItems_WhenStockAvailable_ReservesAndReturnsTrue()
     {
-        var stock = new InMemoryStockService();
+        using var context = CreateContext();
+        var stock = new EfStockService(context);
 
         var (reserved, missing) = stock.TryReserveItems(new[]
         {
@@ -23,7 +39,8 @@ public class StockServiceTests
     [Fact]
     public void TryReserveItems_WhenStockInsufficient_ReturnsFalseWithProductName()
     {
-        var stock = new InMemoryStockService();
+        using var context = CreateContext();
+        var stock = new EfStockService(context);
 
         var (reserved, missing) = stock.TryReserveItems(new[]
         {
@@ -37,7 +54,8 @@ public class StockServiceTests
     [Fact]
     public void TryReserveItems_WhenProductUnknown_ReturnsFalseWithProductName()
     {
-        var stock = new InMemoryStockService();
+        using var context = CreateContext();
+        var stock = new EfStockService(context);
 
         var (reserved, missing) = stock.TryReserveItems(new[]
         {
@@ -51,7 +69,8 @@ public class StockServiceTests
     [Fact]
     public void TryReserveItems_AfterReservation_StockIsDecremented()
     {
-        var stock = new InMemoryStockService();
+        using var context = CreateContext();
+        var stock = new EfStockService(context);
 
         stock.TryReserveItems(new[] { ("Book", 5) });
         var (reserved, missing) = stock.TryReserveItems(new[] { ("Book", 16) });
