@@ -3,15 +3,15 @@ services:
     image: postgres:16
     container_name: orderhub-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: orderhub
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d orderhub"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -20,8 +20,8 @@ services:
     image: rabbitmq:3-management
     container_name: orderhub-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -39,10 +39,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 5001
-      ConnectionStrings__Postgres: "Host=postgres;Database=orderhub;Username=postgres;Password=postgres"
-      RabbitMq__Host: rabbitmq
-      RabbitMq__Username: guest
-      RabbitMq__Password: guest
+      ConnectionStrings__Postgres: ${ORDER_DB_CONNECTION}
+      RabbitMq__Host: ${RABBITMQ_HOST}
+      RabbitMq__Username: ${RABBITMQ_USERNAME}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
     ports:
       - "5001:5001"
     depends_on:
@@ -63,7 +63,7 @@ services:
     container_name: orderhub-notificationservice
     environment:
       PORT: 5002
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      RABBITMQ_URL: ${RABBITMQ_URL}
     ports:
       - "5002:5002"
     depends_on:
@@ -83,10 +83,10 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_HTTP_PORTS: 5003
-      ConnectionStrings__Postgres: "Host=postgres;Database=inventory;Username=postgres;Password=postgres"
-      RabbitMq__Host: rabbitmq
-      RabbitMq__Username: guest
-      RabbitMq__Password: guest
+      ConnectionStrings__Postgres: ${INVENTORY_DB_CONNECTION}
+      RabbitMq__Host: ${RABBITMQ_HOST}
+      RabbitMq__Username: ${RABBITMQ_USERNAME}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
     ports:
       - "5003:5003"
     depends_on:

@@ -8,7 +8,6 @@ RUN npm install
 COPY src/NotificationService/src ./src
 
 ENV PORT=5002
-ENV RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
 
 EXPOSE 5002
 
