@@ -75,6 +75,28 @@ services:
       timeout: 5s
       retries: 5
 
+  inventoryservice:
+    build:
+      context: .
+      dockerfile: src/InventoryService/Dockerfile
+    container_name: orderhub-inventoryservice
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HTTP_PORTS: 5003
+      RabbitMq__Host: rabbitmq
+      RabbitMq__Username: guest
+      RabbitMq__Password: guest
+    ports:
+      - "5003:5003"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
   gateway:
     build:
       context: .
