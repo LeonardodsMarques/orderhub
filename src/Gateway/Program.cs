@@ -24,9 +24,18 @@ builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 builder.Services.AddHealthChecks();
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 builder.Services.AddCors(cors =>
     cors.AddDefaultPolicy(policy =>
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+    {
+        if (allowedOrigins.Length > 0)
+            policy.WithOrigins(allowedOrigins);
+        else
+            policy.AllowAnyOrigin();
+
+        policy.AllowAnyMethod().AllowAnyHeader();
+    }));
 
 var app = builder.Build();
 
