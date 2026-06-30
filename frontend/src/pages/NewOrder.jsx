@@ -10,14 +10,14 @@ export default function NewOrder() {
     customerName: '',
     customerEmail: '',
     items: [
-      { productName: '', quantity: 1, unitPrice: '', currency: 'USD' }
+      { productName: '', quantity: 1, unitPrice: '', currency: 'BRL' }
     ]
   });
 
   const addItem = () => {
     setForm({
       ...form,
-      items: [...form.items, { productName: '', quantity: 1, unitPrice: '', currency: 'USD' }]
+      items: [...form.items, { productName: '', quantity: 1, unitPrice: '', currency: 'BRL' }]
     });
   };
 
@@ -48,20 +48,20 @@ export default function NewOrder() {
 
     try {
       await createOrder(payload);
-      setToast('Order created successfully');
+      setToast('Pedido criado com sucesso');
       setTimeout(() => navigate('/orders'), 1500);
     } catch (err) {
-      console.error('Failed to create order', err);
-      setToast('Failed to create order');
+      console.error('Erro ao criar pedido', err);
+      setToast('Falha ao criar pedido');
     }
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">New Order</h1>
+      <h1 className="text-2xl font-bold mb-4">Novo Pedido</h1>
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Customer Name</label>
+          <label className="block text-sm font-medium mb-1">Nome do Cliente</label>
           <input
             required
             className="w-full border rounded p-2"
@@ -70,7 +70,7 @@ export default function NewOrder() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Customer Email</label>
+          <label className="block text-sm font-medium mb-1">E-mail do Cliente</label>
           <input
             type="email"
             required
@@ -81,11 +81,11 @@ export default function NewOrder() {
         </div>
 
         <div>
-          <h2 className="font-semibold mb-2">Items</h2>
+          <h2 className="font-semibold mb-2">Itens</h2>
           {form.items.map((item, idx) => (
             <div key={idx} className="flex flex-wrap gap-2 mb-2">
               <input
-                placeholder="Product"
+                placeholder="Produto"
                 required
                 className="flex-1 min-w-[150px] border rounded p-2"
                 value={item.productName}
@@ -109,7 +109,7 @@ export default function NewOrder() {
                 onChange={(e) => updateItem(idx, 'unitPrice', e.target.value)}
               />
               <input
-                placeholder="Currency"
+                placeholder="Moeda"
                 required
                 className="w-24 border rounded p-2"
                 value={item.currency}
@@ -120,7 +120,7 @@ export default function NewOrder() {
                 onClick={() => removeItem(idx)}
                 className="text-red-500 px-2"
               >
-                Remove
+                Remover
               </button>
             </div>
           ))}
@@ -129,7 +129,7 @@ export default function NewOrder() {
             onClick={addItem}
             className="text-blue-600 text-sm hover:underline"
           >
-            + Add item
+            + Adicionar item
           </button>
         </div>
 
@@ -137,7 +137,7 @@ export default function NewOrder() {
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Create Order
+          Criar Pedido
         </button>
       </form>
 

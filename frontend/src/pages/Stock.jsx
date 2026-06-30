@@ -12,7 +12,7 @@ export default function Stock() {
       const res = await getStock();
       setItems(Object.entries(res.data).sort(([a], [b]) => a.localeCompare(b)));
     } catch (err) {
-      console.error('Failed to load stock', err);
+      console.error('Erro ao carregar estoque', err);
     }
   };
 
@@ -24,13 +24,13 @@ export default function Stock() {
     e.preventDefault();
     try {
       await setStock(productName, parseInt(quantity, 10));
-      setMessage(`Stock for ${productName} set to ${quantity}`);
+      setMessage(`Estoque de ${productName} definido como ${quantity}`);
       setProductName('');
       setQuantity('');
       await load();
     } catch (err) {
-      console.error('Failed to update stock', err);
-      setMessage('Failed to update stock');
+      console.error('Erro ao atualizar estoque', err);
+      setMessage('Falha ao atualizar estoque');
     }
   };
 
@@ -39,17 +39,17 @@ export default function Stock() {
       await removeStock(name);
       await load();
     } catch (err) {
-      console.error('Failed to remove stock', err);
+      console.error('Erro ao remover estoque', err);
     }
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Stock Management</h1>
+      <h1 className="text-2xl font-bold mb-4">Gerenciamento de Estoque</h1>
 
       <form onSubmit={handleSubmit} className="bg-white p-4 rounded shadow mb-6 flex flex-wrap gap-3 items-end">
         <div>
-          <label className="block text-sm font-medium mb-1">Product Name</label>
+          <label className="block text-sm font-medium mb-1">Nome do Produto</label>
           <input
             required
             className="border rounded p-2"
@@ -58,7 +58,7 @@ export default function Stock() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Quantity</label>
+          <label className="block text-sm font-medium mb-1">Quantidade</label>
           <input
             type="number"
             min="0"
@@ -72,7 +72,7 @@ export default function Stock() {
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Set Stock
+          Definir Estoque
         </button>
         {message && <span className="text-sm text-gray-600">{message}</span>}
       </form>
@@ -81,9 +81,9 @@ export default function Stock() {
         <table className="w-full text-left">
           <thead>
             <tr className="border-b">
-              <th className="p-3">Product</th>
-              <th className="p-3">Quantity</th>
-              <th className="p-3">Actions</th>
+              <th className="p-3">Produto</th>
+              <th className="p-3">Quantidade</th>
+              <th className="p-3">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -96,7 +96,7 @@ export default function Stock() {
                     onClick={() => handleRemove(name)}
                     className="text-red-500 text-sm hover:underline"
                   >
-                    Remove
+                    Remover
                   </button>
                 </td>
               </tr>
@@ -104,7 +104,7 @@ export default function Stock() {
             {items.length === 0 && (
               <tr>
                 <td colSpan="3" className="p-6 text-center text-gray-500">
-                  No stock items.
+                  Nenhum item em estoque.
                 </td>
               </tr>
             )}

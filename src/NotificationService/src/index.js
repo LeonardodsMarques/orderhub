@@ -11,9 +11,9 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`[NOTIFICATION] Server listening on port ${PORT}`);
+  console.log(`[NOTIFICAÇÃO] Servidor ouvindo na porta ${PORT}`);
 });
 
 connect().catch((err) => {
-  console.error('[NOTIFICATION] Initial consumer connection failed', err);
+  console.error('[NOTIFICAÇÃO] Falha na conexão inicial do consumidor', err);
 });

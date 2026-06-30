@@ -9,7 +9,7 @@ let connection = null;
 let channel = null;
 
 function log(message) {
-  console.log(`[NOTIFICATION] ${message}`);
+  console.log(`[NOTIFICAÇÃO] ${message}`);
 }
 
 async function connect() {
@@ -34,26 +34,26 @@ async function connect() {
         const amount = data.totalAmount?.amount ?? data.totalAmount;
         const currency = data.totalAmount?.currency ?? '';
 
-        console.log(`📧 [NOTIFICATION] Order ${data.orderId} created for ${data.customerEmail} — Total: ${amount} ${currency}`);
+        console.log(`📧 [NOTIFICAÇÃO] Pedido ${data.orderId} criado para ${data.customerEmail} — Total: ${amount} ${currency}`);
         channel.ack(msg);
       } catch (err) {
-        console.error('[NOTIFICATION] Failed to process message', err);
+        console.error('[NOTIFICAÇÃO] Falha ao processar mensagem', err);
         channel.nack(msg, false, false);
       }
     });
 
-    log('Connected to RabbitMQ and consuming order-created');
+    log('Conectado ao RabbitMQ e consumindo order-created');
 
     connection.on('error', (err) => {
-      console.error('[NOTIFICATION] Connection error', err.message);
+      console.error('[NOTIFICAÇÃO] Erro de conexão', err.message);
     });
 
     connection.on('close', () => {
-      log('Connection closed, reconnecting in 5s...');
+      log('Conexão fechada, reconectando em 5s...');
       setTimeout(connect, 5000);
     });
   } catch (err) {
-    console.error('[NOTIFICATION] Failed to connect to RabbitMQ', err.message);
+    console.error('[NOTIFICAÇÃO] Falha ao conectar ao RabbitMQ', err.message);
     setTimeout(connect, 5000);
   }
 }

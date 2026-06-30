@@ -15,16 +15,16 @@ export default function Dashboard() {
         );
         setStats({ total: orders.length, pending, totalValue });
       })
-      .catch((err) => console.error('Failed to load dashboard', err));
+      .catch((err) => console.error('Erro ao carregar o dashboard', err));
   }, []);
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard title="Total Orders" value={stats.total} />
-        <StatCard title="Pending Orders" value={stats.pending} />
-        <StatCard title="Total Value" value={`${stats.totalValue.toFixed(2)}`} />
+        <StatCard title="Total de Pedidos" value={stats.total} />
+        <StatCard title="Pedidos Pendentes" value={stats.pending} />
+        <StatCard title="Valor Total" value={`${stats.totalValue.toFixed(2)}`} />
       </div>
     </div>
   );

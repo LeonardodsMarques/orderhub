@@ -24,12 +24,12 @@ public class InventoryConsumer : IConsumer<OrderCreated>
 
         if (reserved)
         {
-            _logger.LogInformation("Stock reserved for order {OrderId}", order.OrderId);
+            _logger.LogInformation("Estoque reservado para o pedido {OrderId}", order.OrderId);
             await context.Publish(new StockReserved(order.OrderId), context.CancellationToken);
         }
         else
         {
-            _logger.LogWarning("Out of stock for product {ProductName} in order {OrderId}", missingProduct, order.OrderId);
+            _logger.LogWarning("Sem estoque para o produto {ProductName} no pedido {OrderId}", missingProduct, order.OrderId);
             await context.Publish(new OutOfStock(order.OrderId, missingProduct ?? "unknown"), context.CancellationToken);
         }
     }

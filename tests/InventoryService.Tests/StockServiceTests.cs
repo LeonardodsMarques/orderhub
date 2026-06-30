@@ -28,8 +28,8 @@ public class StockServiceTests
 
         var (reserved, missing) = stock.TryReserveItems(new[]
         {
-            ("Book", 2),
-            ("Widget", 3)
+            ("Livro", 2),
+            ("Mouse", 3)
         });
 
         Assert.True(reserved);
@@ -44,11 +44,11 @@ public class StockServiceTests
 
         var (reserved, missing) = stock.TryReserveItems(new[]
         {
-            ("Gadget", 10)
+            ("Teclado", 10)
         });
 
         Assert.False(reserved);
-        Assert.Equal("Gadget", missing);
+        Assert.Equal("Teclado", missing);
     }
 
     [Fact]
@@ -72,10 +72,10 @@ public class StockServiceTests
         using var context = CreateContext();
         var stock = new EfStockService(context);
 
-        stock.TryReserveItems(new[] { ("Book", 5) });
-        var (reserved, missing) = stock.TryReserveItems(new[] { ("Book", 16) });
+        stock.TryReserveItems(new[] { ("Livro", 5) });
+        var (reserved, missing) = stock.TryReserveItems(new[] { ("Livro", 16) });
 
         Assert.False(reserved);
-        Assert.Equal("Book", missing);
+        Assert.Equal("Livro", missing);
     }
 }

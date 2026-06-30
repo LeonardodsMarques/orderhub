@@ -3,6 +3,12 @@ import { getOrders } from '../services/api.js';
 
 const TAKE = 10;
 
+const statusLabels = {
+  Pending: 'Pendente',
+  Confirmed: 'Confirmado',
+  Cancelled: 'Cancelado'
+};
+
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [skip, setSkip] = useState(0);
@@ -16,22 +22,22 @@ export default function Orders() {
       const res = await getOrders(skip, TAKE);
       setOrders(res.data || []);
     } catch (err) {
-      console.error('Failed to load orders', err);
+      console.error('Erro ao carregar pedidos', err);
     }
   };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Orders</h1>
+      <h1 className="text-2xl font-bold mb-4">Pedidos</h1>
       <div className="bg-white rounded shadow overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b">
               <th className="p-3">ID</th>
-              <th className="p-3">Customer</th>
+              <th className="p-3">Cliente</th>
               <th className="p-3">Status</th>
               <th className="p-3">Total</th>
-              <th className="p-3">Created</th>
+              <th className="p-3">Criado em</th>
             </tr>
           </thead>
           <tbody>
@@ -44,18 +50,20 @@ export default function Orders() {
                   <span className="text-sm text-gray-500">{o.customerEmail}</span>
                 </td>
                 <td className="p-3">
-                  <span className="px-2 py-1 rounded text-sm bg-gray-100">{o.status}</span>
+                  <span className="px-2 py-1 rounded text-sm bg-gray-100">
+                    {statusLabels[o.status] || o.status}
+                  </span>
                 </td>
                 <td className="p-3">
                   {o.totalAmount?.amount} {o.totalAmount?.currency}
                 </td>
-                <td className="p-3">{new Date(o.createdAt).toLocaleString()}</td>
+                <td className="p-3">{new Date(o.createdAt).toLocaleString('pt-BR')}</td>
               </tr>
             ))}
             {orders.length === 0 && (
               <tr>
                 <td colSpan="5" className="p-6 text-center text-gray-500">
-                  No orders found.
+                  Nenhum pedido encontrado.
                 </td>
               </tr>
             )}
@@ -68,14 +76,14 @@ export default function Orders() {
           onClick={() => setSkip(Math.max(0, skip - TAKE))}
           className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
-          Previous
+          Anterior
         </button>
         <button
           onClick={() => setSkip(skip + TAKE)}
           disabled={orders.length < TAKE}
           className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
         >
-          Next
+          Próximo
         </button>
       </div>
     </div>

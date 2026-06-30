@@ -44,7 +44,7 @@ public class EfStockService : IStockService
     public void SetQuantity(string productName, int quantity)
     {
         if (quantity < 0)
-            throw new ArgumentException("Quantity cannot be negative.", nameof(quantity));
+            throw new ArgumentException("A quantidade não pode ser negativa.", nameof(quantity));
 
         var item = _dbContext.StockItems.Find(productName);
         if (item is null)

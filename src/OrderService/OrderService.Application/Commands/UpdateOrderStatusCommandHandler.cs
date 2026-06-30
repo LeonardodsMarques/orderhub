@@ -17,7 +17,7 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
     public async Task<bool> HandleAsync(UpdateOrderStatusCommand command, CancellationToken cancellationToken = default)
     {
         if (!Enum.TryParse<OrderStatus>(command.Status, ignoreCase: true, out var status))
-            throw new ArgumentException($"Invalid status: {command.Status}", nameof(command));
+            throw new ArgumentException($"Status inválido: {command.Status}", nameof(command));
 
         var order = await _repository.GetByIdAsync(command.Id, cancellationToken);
         if (order is null)
@@ -32,7 +32,7 @@ public class UpdateOrderStatusCommandHandler : ICommandHandler<UpdateOrderStatus
                 order.Cancel();
                 break;
             default:
-                throw new ArgumentException($"Status {status} is not supported for manual updates.");
+                throw new ArgumentException($"Status {status} não é suportado para atualizações manuais.");
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
