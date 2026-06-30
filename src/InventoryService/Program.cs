@@ -45,13 +45,14 @@ builder.Services.AddMassTransit(busConfigurator =>
 
 var app = builder.Build();
 
+app.UseMiddleware<InventoryService.Middleware.ExceptionMiddleware>();
 app.MapControllers();
 app.MapHealthChecks("/health");
 
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<InventoryDbContext>();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.Migrate();
 
     if (!dbContext.StockItems.Any())
     {

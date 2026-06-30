@@ -26,8 +26,17 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Gui
 
     public async Task<Guid> HandleAsync(CreateOrderCommand command, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(command.CustomerName))
+            throw new ArgumentException("O nome do cliente é obrigatório.", nameof(command));
+
+        if (string.IsNullOrWhiteSpace(command.CustomerEmail) || !command.CustomerEmail.Contains('@'))
+            throw new ArgumentException("E-mail do cliente inválido.", nameof(command));
+
         if (command.Items.Count == 0)
             throw new ArgumentException("O pedido deve conter pelo menos um item.", nameof(command));
+
+        if (command.Items.Any(i => i.Quantity <= 0))
+            throw new ArgumentException("A quantidade de cada item deve ser maior que zero.", nameof(command));
 
         var groupedItems = command.Items
             .GroupBy(i => i.ProductName)

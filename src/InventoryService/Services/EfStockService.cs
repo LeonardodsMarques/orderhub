@@ -54,6 +54,9 @@ public class EfStockService : IStockService
 
     public void SetQuantity(string productName, int quantity)
     {
+        if (string.IsNullOrWhiteSpace(productName))
+            throw new ArgumentException("O nome do produto é obrigatório.", nameof(productName));
+
         if (quantity < 0)
             throw new ArgumentException("A quantidade não pode ser negativa.", nameof(quantity));
 
@@ -75,8 +78,14 @@ public class EfStockService : IStockService
 
     public async Task SetPriceAsync(string productName, decimal unitPrice, string currency, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(productName))
+            throw new ArgumentException("O nome do produto é obrigatório.", nameof(productName));
+
         if (unitPrice < 0)
             throw new ArgumentException("O preço não pode ser negativo.", nameof(unitPrice));
+
+        if (string.IsNullOrWhiteSpace(currency))
+            throw new ArgumentException("A moeda é obrigatória.", nameof(currency));
 
         var item = _dbContext.StockItems.Find(productName);
         if (item is null)
