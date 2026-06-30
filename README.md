@@ -9,6 +9,7 @@ Sistema de pedidos e estoque baseado em microsserviços. Demonstra comunicação
 - **PostgreSQL 16** — banco relacional por serviço
 - **RabbitMQ 3** — message broker
 - **MassTransit** — abstração sobre RabbitMQ
+- **JWT Bearer** — autenticação no Gateway
 - **Docker + Docker Compose** — execução local
 
 ## Arquitetura
@@ -22,6 +23,7 @@ graph LR
     C --> F[(PostgreSQL<br/>orderhub)]
     D --> G[(PostgreSQL<br/>inventory)]
     C -.OrderCreated.-> H[(RabbitMQ)]
+    C -.OrderCancelled.-> H
     D -.StockReserved / OutOfStock.-> H
     D -.ProductPriceChanged.-> H
     E -.OrderCreated.-> H
@@ -30,10 +32,12 @@ graph LR
 ### Fluxo de criação de pedido
 
 1. Frontend chama `POST /api/orders` via Gateway.
-2. OrderService cria o pedido com status `Pending` e publica `OrderCreated`.
-3. InventoryService consome `OrderCreated`, reserva estoque e publica `StockReserved` ou `OutOfStock`.
-4. OrderService atualiza o pedido para `Confirmed` ou `Canceled`.
-5. NotificationService loga uma notificação ao receber `OrderCreated`.
+2. OrderService cria o pedido com status `Pending` e salva o evento `OrderCreated` na tabela de outbox (mesma transação do pedido).
+3. `OutboxProcessor` publica o evento para o RabbitMQ.
+4. InventoryService consome `OrderCreated`, reserva estoque e publica `StockReserved` ou `OutOfStock`.
+5. OrderService atualiza o pedido para `Confirmed` ou `Canceled`.
+6. Ao cancelar um pedido confirmado ou pendente, OrderService publica `OrderCancelled` e InventoryService libera o estoque reservado.
+7. NotificationService loga uma notificação ao receber `OrderCreated`.
 
 ## Como executar
 
@@ -61,7 +65,20 @@ graph LR
 4. Acesse:
    - Frontend: http://localhost:3000
    - API Gateway: http://localhost:5000
+   - Swagger OrderService: http://localhost:5000/swagger
    - RabbitMQ Management: http://localhost:15672 (guest/guest por padrão no `.env.example`)
+
+### Autenticação
+
+Os endpoints de escrita (`POST`, `PATCH`, `DELETE`) exigem JWT. Faça login pelo frontend ou diretamente:
+
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "usuario@exemplo.com"}'
+```
+
+Use o token retornado no header `Authorization: Bearer <token>`.
 
 > Em produção, nunca use os valores padrão do `.env.example`. Utilize secrets do seu ambiente de deploy.
 
@@ -69,14 +86,20 @@ graph LR
 
 Todos os endpoints são acessados via Gateway em `http://localhost:5000`.
 
-### Pedidos
+### Autenticação
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/orders` | Cria um pedido |
-| `GET` | `/api/orders?skip=0&take=10` | Lista pedidos |
-| `GET` | `/api/orders/{id}` | Busca pedido por ID |
-| `PATCH` | `/api/orders/{id}/status` | Atualiza status do pedido |
+| `POST` | `/api/auth/login` | Gera token JWT |
+
+### Pedidos
+
+| Método | Rota | Descrição | Auth |
+|--------|------|-----------|------|
+| `POST` | `/api/orders` | Cria um pedido | ✅ |
+| `GET` | `/api/orders?skip=0&take=10` | Lista pedidos | ❌ |
+| `GET` | `/api/orders/{id}` | Busca pedido por ID | ❌ |
+| `PATCH` | `/api/orders/{id}/status` | Atualiza status do pedido | ✅ |
 
 Exemplo de criação de pedido:
 
@@ -93,11 +116,11 @@ Exemplo de criação de pedido:
 
 ### Estoque
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/api/inventory/stock` | Lista produtos em estoque |
-| `POST` | `/api/inventory/stock` | Atualiza ou cria produto |
-| `DELETE` | `/api/inventory/stock/{productName}` | Remove produto |
+| Método | Rota | Descrição | Auth |
+|--------|------|-----------|------|
+| `GET` | `/api/inventory/stock` | Lista produtos em estoque | ❌ |
+| `POST` | `/api/inventory/stock` | Atualiza ou cria produto | ✅ |
+| `DELETE` | `/api/inventory/stock/{productName}` | Remove produto | ✅ |
 
 Exemplo de atualização de produto:
 
@@ -145,12 +168,14 @@ dotnet test OrderHub.sln
 - **CQRS manual no OrderService**: separação clara entre commands e queries sem adicionar bibliotecas pesadas.
 - **Read model local de preços**: o OrderService replica preços recebidos via `ProductPriceChanged`, evitando chamadas síncronas ao InventoryService.
 - **Event-driven para reserva de estoque**: desacopla criação de pedido da verificação de estoque, permitindo evoluir para saga pattern no futuro.
-- **Gateway com YARP**: centraliza acesso externo e rate limiting por IP.
+- **Outbox pattern**: eventos de domínio são persistidos na mesma transação do agregado e publicados assincronamente por um processador em background.
+- **Liberação de estoque**: pedidos cancelados publicam `OrderCancelled`, que o InventoryService consome para devolver itens ao estoque.
+- **Gateway com YARP**: centraliza acesso externo, rate limiting por IP, CORS configurável e autenticação JWT.
+- **Swagger/OpenAPI**: documentação interativa dos serviços acessível via Gateway em desenvolvimento.
 
 ## Melhorias futuras
 
-- Autenticação e autorização (JWT)
-- Middleware global de tratamento de erros com ProblemDetails
 - Testes de integração com TestContainers
-- Migrations EF Core versionadas
 - Observabilidade com OpenTelemetry
+- Dead-letter queue e retry policy explícita no MassTransit
+- Concorrência otimista na reserva de estoque
