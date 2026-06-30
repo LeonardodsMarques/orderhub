@@ -7,5 +7,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OrderService.Domain\OrderService.Domain.csproj" />
+    <ProjectReference Include="..\..\OrderHub.Contracts\OrderHub.Contracts.csproj" />
   </ItemGroup>
 </Project>

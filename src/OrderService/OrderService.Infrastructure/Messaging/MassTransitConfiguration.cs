@@ -1,8 +1,9 @@
 using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OrderHub.Contracts;
 using OrderService.Application.Interfaces;
-using OrderService.Domain.Events;
+using OrderService.Infrastructure.Messaging.Consumers;
 using RabbitMQ.Client;
 
 namespace OrderService.Infrastructure.Messaging;
@@ -13,6 +14,9 @@ public static class MassTransitConfiguration
     {
         services.AddMassTransit(busConfigurator =>
         {
+            busConfigurator.AddConsumer<StockReservedConsumer>();
+            busConfigurator.AddConsumer<OutOfStockConsumer>();
+
             busConfigurator.UsingRabbitMq((context, cfg) =>
             {
                 var host = configuration["RabbitMq:Host"] ?? "localhost";
@@ -27,11 +31,22 @@ public static class MassTransitConfiguration
 
                 cfg.Message<OrderCreated>(x => x.SetEntityName("OrderCreated"));
                 cfg.Publish<OrderCreated>(p => p.ExchangeType = ExchangeType.Fanout);
+
+                cfg.ReceiveEndpoint("order-stock-reserved", e =>
+                {
+                    e.ConfigureConsumer<StockReservedConsumer>(context);
+                });
+
+                cfg.ReceiveEndpoint("order-out-of-stock", e =>
+                {
+                    e.ConfigureConsumer<OutOfStockConsumer>(context);
+                });
+
                 cfg.ConfigureEndpoints(context);
             });
         });
 
-        services.AddScoped<IOrderEventPublisher, MassTransitEventBus>();
+        services.AddScoped<IEventPublisher, MassTransitEventBus>();
 
         return services;
     }

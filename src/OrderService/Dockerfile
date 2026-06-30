@@ -1,10 +1,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+COPY src/OrderHub.Contracts/OrderHub.Contracts.csproj src/OrderHub.Contracts/
 COPY src/OrderService/OrderService.Domain/OrderService.Domain.csproj src/OrderService/OrderService.Domain/
 COPY src/OrderService/OrderService.Application/OrderService.Application.csproj src/OrderService/OrderService.Application/
 COPY src/OrderService/OrderService.Infrastructure/OrderService.Infrastructure.csproj src/OrderService/OrderService.Infrastructure/
 COPY src/OrderService/OrderService.API/OrderService.API.csproj src/OrderService/OrderService.API/
 RUN dotnet restore src/OrderService/OrderService.API/OrderService.API.csproj
+COPY src/OrderHub.Contracts/ src/OrderHub.Contracts/
 COPY src/OrderService/ src/OrderService/
 RUN dotnet publish src/OrderService/OrderService.API/OrderService.API.csproj -c Release -o /app/publish
 

@@ -1,10 +1,9 @@
 using MassTransit;
 using OrderService.Application.Interfaces;
-using OrderService.Domain.Events;
 
 namespace OrderService.Infrastructure.Messaging;
 
-public class MassTransitEventBus : IOrderEventPublisher
+public class MassTransitEventBus : IEventPublisher
 {
     private readonly IBus _bus;
 
@@ -13,8 +12,8 @@ public class MassTransitEventBus : IOrderEventPublisher
         _bus = bus;
     }
 
-    public Task PublishAsync(OrderCreated evt, CancellationToken cancellationToken = default)
+    public Task PublishAsync<T>(T message, CancellationToken cancellationToken = default) where T : class
     {
-        return _bus.Publish(evt, cancellationToken);
+        return _bus.Publish(message, cancellationToken);
     }
 }

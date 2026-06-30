@@ -1,7 +1,7 @@
+using OrderHub.Contracts;
 using OrderService.Application.Dtos;
 using OrderService.Application.Interfaces;
 using OrderService.Domain.Entities;
-using OrderService.Domain.Events;
 
 namespace OrderService.Application.Commands;
 
@@ -9,12 +9,12 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Gui
 {
     private readonly IOrderRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IOrderEventPublisher _eventPublisher;
+    private readonly IEventPublisher _eventPublisher;
 
     public CreateOrderCommandHandler(
         IOrderRepository repository,
         IUnitOfWork unitOfWork,
-        IOrderEventPublisher eventPublisher)
+        IEventPublisher eventPublisher)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
@@ -35,7 +35,13 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Gui
         await _repository.AddAsync(order, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var evt = new OrderCreated(order.Id, order.CustomerEmail, order.TotalAmount, order.CreatedAt);
+        var evt = new OrderCreated(
+            order.Id,
+            order.CustomerEmail,
+            new OrderHub.Contracts.MoneyDto(order.TotalAmount.Amount, order.TotalAmount.Currency),
+            order.CreatedAt,
+            order.Items.Select(i => new OrderCreatedItem(i.ProductName, i.Quantity)).ToList());
+
         await _eventPublisher.PublishAsync(evt, cancellationToken);
 
         return order.Id;
