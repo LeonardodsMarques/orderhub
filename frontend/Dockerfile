@@ -8,6 +8,7 @@ RUN npm install
 COPY frontend/ .
 
 ENV PORT=3000
+ENV VITE_API_URL=http://localhost:5000/api
 
 EXPOSE 3000
 

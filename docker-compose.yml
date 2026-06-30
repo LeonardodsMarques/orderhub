@@ -133,6 +133,7 @@ services:
     container_name: orderhub-frontend
     environment:
       PORT: 3000
+      VITE_API_URL: ${VITE_API_URL}
     ports:
       - "3000:3000"
     depends_on:
