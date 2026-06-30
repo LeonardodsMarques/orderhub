@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore OrderHub.sln
+
+      - name: Build
+        run: dotnet build OrderHub.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test OrderHub.sln --no-build --configuration Release
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit
+        run: npm audit --audit-level=moderate
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: http://localhost:5000/api
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/Gateway/Dockerfile
+          push: false
+          tags: orderhub-gateway:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build OrderService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/OrderService/Dockerfile
+          push: false
+          tags: orderhub-orderservice:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build InventoryService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/InventoryService/Dockerfile
+          push: false
+          tags: orderhub-inventoryservice:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build NotificationService
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/NotificationService/Dockerfile
+          push: false
+          tags: orderhub-notificationservice:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: false
+          tags: orderhub-frontend:latest
+          build-args: |
+            VITE_API_URL=http://localhost:5000/api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
