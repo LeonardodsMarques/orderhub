@@ -5,7 +5,7 @@ Sistema de pedidos e estoque baseado em microsserviços. Demonstra comunicação
 ## Stack
 
 - **.NET 8** — API Gateway, OrderService, InventoryService
-- **React 18 + Vite** — interface web
+- **React 18 + Vite** — interface web, build otimizado e servido via nginx
 - **PostgreSQL 16** — banco relacional por serviço
 - **RabbitMQ 3** — message broker
 - **MassTransit** — abstração sobre RabbitMQ

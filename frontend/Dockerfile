@@ -1,17 +1,24 @@
-FROM node:20-alpine
+# Build stage
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY frontend/package.json ./
-RUN npm install
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+
+ARG VITE_API_URL=http://localhost:5000/api
+ENV VITE_API_URL=$VITE_API_URL
 
 COPY frontend/ .
+RUN npm run build
 
-ENV PORT=3000
-ENV VITE_API_URL=http://localhost:5000/api
+# Runtime stage
+FROM nginx:alpine
 
-EXPOSE 3000
+COPY --from=build /app/dist /usr/share/nginx/html
 
-HEALTHCHECK CMD wget -qO- http://localhost:3000/ || exit 1
+EXPOSE 80
 
-CMD ["npm", "run", "dev"]
+HEALTHCHECK CMD wget -qO- http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

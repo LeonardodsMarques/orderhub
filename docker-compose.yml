@@ -133,12 +133,11 @@ services:
     build:
       context: .
       dockerfile: frontend/Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
     container_name: orderhub-frontend
-    environment:
-      PORT: 3000
-      VITE_API_URL: ${VITE_API_URL}
     ports:
-      - "3000:3000"
+      - "3000:80"
     depends_on:
       gateway:
         condition: service_healthy
