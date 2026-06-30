@@ -1,0 +1,91 @@
+---
+- name: Deploy OrderHub no VPS
+  hosts: prod
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+
+  tasks:
+    - name: Verificar se o Docker está instalado
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Falhar se Docker não estiver instalado
+      ansible.builtin.fail:
+        msg: "Docker não está instalado no servidor. Instale Docker + Docker Compose plugin primeiro."
+      when: docker_version.rc != 0
+
+    - name: Verificar se o Docker Compose plugin está instalado
+      ansible.builtin.command: docker compose version
+      register: compose_version
+      changed_when: false
+      ignore_errors: true
+
+    - name: Falhar se Docker Compose não estiver instalado
+      ansible.builtin.fail:
+        msg: "Docker Compose plugin não está instalado no servidor."
+      when: compose_version.rc != 0
+
+    - name: Garantir que o diretório da aplicação existe
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+
+    - name: Clonar ou atualizar o repositório
+      ansible.builtin.git:
+        repo: "{{ git_repo }}"
+        dest: "{{ app_dir }}"
+        version: "{{ git_branch }}"
+        update: yes
+        force: yes
+      become_user: "{{ ansible_user }}"
+
+    - name: Criar arquivo .env de produção
+      ansible.builtin.copy:
+        dest: "{{ app_dir }}/.env"
+        content: |
+          {% for key, value in env_vars.items() %}
+          {{ key }}={{ value }}
+          {% endfor %}
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0600"
+      become_user: "{{ ansible_user }}"
+
+    - name: Subir os serviços com Docker Compose
+      ansible.builtin.shell: |
+        docker compose down
+        docker compose up --build -d
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: "{{ ansible_user }}"
+      environment:
+        COMPOSE_PROJECT_NAME: "{{ compose_project_name }}"
+
+    - name: Aguardar healthcheck do Gateway
+      ansible.builtin.uri:
+        url: "http://localhost:5000/health"
+        status_code: 200
+      register: healthcheck
+      until: healthcheck.status == 200
+      retries: 12
+      delay: 10
+      ignore_errors: true
+
+    - name: Mostrar status dos containers
+      ansible.builtin.shell: |
+        docker compose ps
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: "{{ ansible_user }}"
+      changed_when: false
+      register: container_status
+
+    - name: Exibir status
+      ansible.builtin.debug:
+        var: container_status.stdout_lines

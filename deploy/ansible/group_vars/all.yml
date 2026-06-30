@@ -1,0 +1,32 @@
+---
+# Caminho no servidor onde o repositório será clonado/atualizado
+app_dir: /opt/orderhub
+
+# Repositório Git (use HTTPS com token ou SSH com deploy key)
+git_repo: https://github.com/SEU_USUARIO/OrderHub.git
+git_branch: main
+
+# Nome do projeto Docker Compose
+compose_project_name: orderhub
+
+# Variáveis de ambiente de produção (COPIE do .env.example e ajuste)
+env_vars:
+  POSTGRES_USER: orderhub
+  POSTGRES_PASSWORD: MUDE_ESTA_SENHA
+  POSTGRES_DB: orderhub
+
+  RABBITMQ_DEFAULT_USER: orderhub
+  RABBITMQ_DEFAULT_PASS: MUDE_ESTA_SENHA
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_USERNAME: orderhub
+  RABBITMQ_PASSWORD: MUDE_ESTA_SENHA
+  RABBITMQ_URL: amqp://orderhub:MUDE_ESTA_SENHA@rabbitmq:5672
+
+  ORDER_DB_CONNECTION: Host=postgres;Port=5432;Database=orderhub;Username=orderhub;Password=MUDE_ESTA_SENHA
+  INVENTORY_DB_CONNECTION: Host=postgres;Port=5432;Database=orderhub;Username=orderhub;Password=MUDE_ESTA_SENHA
+
+  JWT_KEY: MUDE_ESTA_CHAVE_JWT_POR_UMA_STRING_LONGA_E_ALEATORIA
+  JWT_ISSUER: OrderHub
+  JWT_AUDIENCE: OrderHubUsers
+
+  VITE_API_URL: http://SEU_IP_AQUI:5000
