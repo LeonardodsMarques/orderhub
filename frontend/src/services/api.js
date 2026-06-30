@@ -16,8 +16,8 @@ export const createOrder = (data) => api.post('/orders', data);
 
 export const getStock = () => api.get('/inventory/stock');
 
-export const setStock = (productName, quantity) =>
-  api.post('/inventory/stock', { productName, quantity });
+export const setStock = (productName, quantity, unitPrice, currency = 'BRL') =>
+  api.post('/inventory/stock', { productName, quantity, unitPrice, currency });
 
 export const removeStock = (productName) =>
   api.delete(`/inventory/stock/${encodeURIComponent(productName)}`);

@@ -6,27 +6,23 @@ import Toast from '../components/Toast.jsx';
 export default function NewOrder() {
   const navigate = useNavigate();
   const [toast, setToast] = useState('');
-  const [stock, setStock] = useState({});
+  const [stock, setStock] = useState([]);
   const [form, setForm] = useState({
     customerName: '',
     customerEmail: '',
-    items: [
-      { productName: '', quantity: 1, unitPrice: '', currency: 'BRL' }
-    ]
+    items: [{ productName: '', quantity: 1 }]
   });
 
   useEffect(() => {
     getStock()
-      .then((res) => setStock(res.data || {}))
+      .then((res) => setStock(res.data || []))
       .catch((err) => console.error('Erro ao carregar estoque', err));
   }, []);
-
-  const stockProducts = Object.keys(stock).sort();
 
   const addItem = () => {
     setForm({
       ...form,
-      items: [...form.items, { productName: '', quantity: 1, unitPrice: '', currency: 'BRL' }]
+      items: [...form.items, { productName: '', quantity: 1 }]
     });
   };
 
@@ -41,35 +37,20 @@ export default function NewOrder() {
     setForm({ ...form, items });
   };
 
-  const aggregateItems = (items) => {
-    const map = new Map();
-    items.forEach((item) => {
-      const existing = map.get(item.productName);
-      if (existing) {
-        existing.quantity += item.quantity;
-      } else {
-        map.set(item.productName, { ...item });
-      }
-    });
-    return Array.from(map.values());
-  };
+  const getProduct = (name) => stock.find((p) => p.productName === name);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const parsedItems = form.items
-      .filter((i) => i.productName)
-      .map((i) => ({
-        productName: i.productName,
-        quantity: parseInt(i.quantity, 10),
-        unitPrice: parseFloat(i.unitPrice),
-        currency: i.currency
-      }));
-
     const payload = {
       customerName: form.customerName,
       customerEmail: form.customerEmail,
-      items: aggregateItems(parsedItems)
+      items: form.items
+        .filter((i) => i.productName)
+        .map((i) => ({
+          productName: i.productName,
+          quantity: parseInt(i.quantity, 10)
+        }))
     };
 
     try {
@@ -82,7 +63,7 @@ export default function NewOrder() {
     }
   };
 
-  const canAddMore = stockProducts.length > form.items.length;
+  const canAddMore = stock.length > form.items.length;
 
   return (
     <div>
@@ -110,73 +91,59 @@ export default function NewOrder() {
 
         <div>
           <h2 className="font-semibold mb-2">Itens</h2>
-          {stockProducts.length === 0 && (
+          {stock.length === 0 && (
             <p className="text-sm text-gray-600 mb-2">Nenhum produto disponível no estoque.</p>
           )}
-          {form.items.map((item, idx) => (
-            <div key={idx} className="flex flex-wrap gap-2 mb-2 items-end">
-              <div className="flex-1 min-w-[200px]">
-                <label className="block text-xs text-gray-500 mb-1">Produto</label>
-                <select
-                  required
-                  className="w-full border rounded p-2"
-                  value={item.productName}
-                  onChange={(e) => updateItem(idx, 'productName', e.target.value)}
+          {form.items.map((item, idx) => {
+            const product = getProduct(item.productName);
+            return (
+              <div key={idx} className="flex flex-wrap gap-2 mb-2 items-end">
+                <div className="flex-1 min-w-[250px]">
+                  <label className="block text-xs text-gray-500 mb-1">Produto</label>
+                  <select
+                    required
+                    className="w-full border rounded p-2"
+                    value={item.productName}
+                    onChange={(e) => updateItem(idx, 'productName', e.target.value)}
+                  >
+                    <option value="">Selecione um produto</option>
+                    {stock.map((p) => (
+                      <option key={p.productName} value={p.productName}>
+                        {p.productName} — {p.unitPrice.toFixed(2)} {p.currency} ({p.quantity} em estoque)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Quantidade</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    className="w-24 border rounded p-2"
+                    value={item.quantity}
+                    onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
+                  />
+                </div>
+                {product && (
+                  <div className="text-sm text-gray-600 py-2">
+                    Total: {(product.unitPrice * item.quantity).toFixed(2)} {product.currency}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeItem(idx)}
+                  className="text-red-500 px-2 mb-1"
                 >
-                  <option value="">Selecione um produto</option>
-                  {stockProducts.map((name) => (
-                    <option key={name} value={name}>
-                      {name} ({stock[name]} em estoque)
-                    </option>
-                  ))}
-                </select>
+                  Remover
+                </button>
               </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Quantidade</label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  className="w-24 border rounded p-2"
-                  value={item.quantity}
-                  onChange={(e) => updateItem(idx, 'quantity', e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Preço unitário</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  required
-                  className="w-28 border rounded p-2"
-                  value={item.unitPrice}
-                  onChange={(e) => updateItem(idx, 'unitPrice', e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Moeda</label>
-                <input
-                  placeholder="Moeda"
-                  required
-                  className="w-24 border rounded p-2"
-                  value={item.currency}
-                  onChange={(e) => updateItem(idx, 'currency', e.target.value)}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => removeItem(idx)}
-                className="text-red-500 px-2 mb-1"
-              >
-                Remover
-              </button>
-            </div>
-          ))}
+            );
+          })}
           <button
             type="button"
             onClick={addItem}
-            disabled={!canAddMore || stockProducts.length === 0}
+            disabled={!canAddMore || stock.length === 0}
             className="text-blue-600 text-sm hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             + Adicionar item
@@ -185,7 +152,7 @@ export default function NewOrder() {
 
         <button
           type="submit"
-          disabled={stockProducts.length === 0 || form.items.some((i) => !i.productName)}
+          disabled={stock.length === 0 || form.items.some((i) => !i.productName)}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Criar Pedido

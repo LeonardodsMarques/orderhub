@@ -1,9 +1,8 @@
-namespace InventoryService.Entities;
+namespace OrderService.Domain.Entities;
 
-public class StockItem
+public class ProductPrice
 {
     public string ProductName { get; set; } = string.Empty;
-    public int Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public string Currency { get; set; } = "BRL";
 }

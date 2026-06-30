@@ -18,6 +18,7 @@ builder.Services.AddDbContext<OrderDbContext>(options =>
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IProductPriceProvider, ProductPriceProvider>();
 
 builder.Services.AddScoped<ICommandHandler<CreateOrderCommand, Guid>, CreateOrderCommandHandler>();
 builder.Services.AddScoped<ICommandHandler<UpdateOrderStatusCommand, bool>, UpdateOrderStatusCommandHandler>();
@@ -36,6 +37,12 @@ using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
     dbContext.Database.EnsureCreated();
+
+    if (!dbContext.ProductPrices.Any())
+    {
+        dbContext.ProductPrices.AddRange(ProductSeed.Items);
+        dbContext.SaveChanges();
+    }
 }
 
 app.Run();

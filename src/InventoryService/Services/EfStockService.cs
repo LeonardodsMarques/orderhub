@@ -1,5 +1,6 @@
 using InventoryService.Data;
 using InventoryService.Entities;
+using InventoryService.Messaging;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryService.Services;
@@ -7,10 +8,12 @@ namespace InventoryService.Services;
 public class EfStockService : IStockService
 {
     private readonly InventoryDbContext _dbContext;
+    private readonly IProductPricePublisher _pricePublisher;
 
-    public EfStockService(InventoryDbContext dbContext)
+    public EfStockService(InventoryDbContext dbContext, IProductPricePublisher pricePublisher)
     {
         _dbContext = dbContext;
+        _pricePublisher = pricePublisher;
     }
 
     public (bool Reserved, string? MissingProduct) TryReserveItems(IEnumerable<(string ProductName, int Quantity)> items)
@@ -41,6 +44,14 @@ public class EfStockService : IStockService
             .ToDictionary(i => i.ProductName, i => i.Quantity);
     }
 
+    public IReadOnlyList<StockItem> GetProducts()
+    {
+        return _dbContext.StockItems
+            .AsNoTracking()
+            .OrderBy(i => i.ProductName)
+            .ToList();
+    }
+
     public void SetQuantity(string productName, int quantity)
     {
         if (quantity < 0)
@@ -49,12 +60,36 @@ public class EfStockService : IStockService
         var item = _dbContext.StockItems.Find(productName);
         if (item is null)
         {
-            item = new StockItem { ProductName = productName };
+            item = new StockItem
+            {
+                ProductName = productName,
+                UnitPrice = 0,
+                Currency = "BRL"
+            };
             _dbContext.StockItems.Add(item);
         }
 
         item.Quantity = quantity;
         _dbContext.SaveChanges();
+    }
+
+    public async Task SetPriceAsync(string productName, decimal unitPrice, string currency, CancellationToken cancellationToken = default)
+    {
+        if (unitPrice < 0)
+            throw new ArgumentException("O preço não pode ser negativo.", nameof(unitPrice));
+
+        var item = _dbContext.StockItems.Find(productName);
+        if (item is null)
+            throw new InvalidOperationException($"Produto '{productName}' não encontrado no estoque.");
+
+        if (item.UnitPrice == unitPrice && item.Currency == currency)
+            return;
+
+        item.UnitPrice = unitPrice;
+        item.Currency = currency;
+        _dbContext.SaveChanges();
+
+        await _pricePublisher.PublishPriceChangedAsync(productName, unitPrice, currency, cancellationToken);
     }
 
     public bool RemoveProduct(string productName)

@@ -16,6 +16,8 @@ public class InventoryDbContext : DbContext
             item.HasKey(i => i.ProductName);
             item.Property(i => i.ProductName).HasMaxLength(200);
             item.Property(i => i.Quantity).IsRequired();
+            item.Property(i => i.UnitPrice).IsRequired().HasPrecision(18, 2);
+            item.Property(i => i.Currency).IsRequired().HasMaxLength(3);
         });
     }
 }

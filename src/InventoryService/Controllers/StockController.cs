@@ -15,15 +15,20 @@ public class StockController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IReadOnlyDictionary<string, int>> GetStock()
+    public ActionResult<IReadOnlyList<StockProductDto>> GetProducts()
     {
-        return Ok(_stockService.GetStock());
+        var products = _stockService.GetProducts()
+            .Select(p => new StockProductDto(p.ProductName, p.Quantity, p.UnitPrice, p.Currency))
+            .ToList();
+
+        return Ok(products);
     }
 
     [HttpPost]
-    public IActionResult SetQuantity([FromBody] SetStockRequest request)
+    public async Task<IActionResult> UpsertProduct([FromBody] UpsertStockRequest request)
     {
         _stockService.SetQuantity(request.ProductName, request.Quantity);
+        await _stockService.SetPriceAsync(request.ProductName, request.UnitPrice, request.Currency);
         return NoContent();
     }
 
@@ -35,4 +40,6 @@ public class StockController : ControllerBase
     }
 }
 
-public record SetStockRequest(string ProductName, int Quantity);
+public record StockProductDto(string ProductName, int Quantity, decimal UnitPrice, string Currency);
+
+public record UpsertStockRequest(string ProductName, int Quantity, decimal UnitPrice, string Currency);

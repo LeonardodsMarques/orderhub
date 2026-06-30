@@ -16,6 +16,7 @@ public static class MassTransitConfiguration
         {
             busConfigurator.AddConsumer<StockReservedConsumer>();
             busConfigurator.AddConsumer<OutOfStockConsumer>();
+            busConfigurator.AddConsumer<ProductPriceChangedConsumer>();
 
             busConfigurator.UsingRabbitMq((context, cfg) =>
             {
@@ -40,6 +41,11 @@ public static class MassTransitConfiguration
                 cfg.ReceiveEndpoint("order-out-of-stock", e =>
                 {
                     e.ConfigureConsumer<OutOfStockConsumer>(context);
+                });
+
+                cfg.ReceiveEndpoint("order-product-price-changed", e =>
+                {
+                    e.ConfigureConsumer<ProductPriceChangedConsumer>(context);
                 });
 
                 cfg.ConfigureEndpoints(context);

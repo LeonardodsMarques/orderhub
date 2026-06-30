@@ -9,6 +9,7 @@ public class OrderDbContext : DbContext
     public OrderDbContext(DbContextOptions<OrderDbContext> options) : base(options) { }
 
     public DbSet<Order> Orders => Set<Order>();
+    public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +43,14 @@ public class OrderDbContext : DbContext
                 money.Property(m => m.Amount).HasColumnName("UnitPrice").HasPrecision(18, 2);
                 money.Property(m => m.Currency).HasColumnName("UnitPriceCurrency").HasMaxLength(3);
             });
+        });
+
+        modelBuilder.Entity<ProductPrice>(price =>
+        {
+            price.HasKey(p => p.ProductName);
+            price.Property(p => p.ProductName).HasMaxLength(200);
+            price.Property(p => p.UnitPrice).IsRequired().HasPrecision(18, 2);
+            price.Property(p => p.Currency).IsRequired().HasMaxLength(3);
         });
     }
 }

@@ -1,5 +1,6 @@
 using InventoryService.Consumers;
 using InventoryService.Data;
+using InventoryService.Messaging;
 using InventoryService.Services;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ builder.Services.AddDbContext<InventoryDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 builder.Services.AddScoped<IStockService, EfStockService>();
+builder.Services.AddScoped<IProductPricePublisher, MassTransitProductPricePublisher>();
 
 builder.Services.AddMassTransit(busConfigurator =>
 {
